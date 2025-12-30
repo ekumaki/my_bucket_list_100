@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>やりたいことリスト100</title>
+    
+    <!-- PWA用メタデータ -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#fcfbf7">
+    <meta name="application-name" content="My100List">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✏️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22 style=%22background-color: white;%22><text y=%22.9em%22 font-size=%2290%22>✏️</text></svg>">
+
+    <!-- フォント: Google Fonts (Yomogi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
+
+    <!-- SortableJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <style>
+        :root {
+            --paper-bg: #fcfbf7;
+            --line-color: #a4b0be;
+            --text-color: #4b4b4b;
+            --accent-color: #ff6b6b;
+            --line-height: 40px;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-touch-callout: none; 
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Yomogi', cursive;
+            background-color: #e8e8e8;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--paper-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            height: 100%;
+            overflow: hidden; /* サイドバー用 */
+        }
+
+        /* ヘッダー */
+        header {
+            padding: 10px 15px;
+            background-color: var(--paper-bg);
+            border-bottom: 2px solid var(--text-color);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            height: 60px;
+        }
+
+        /* メニューボタン */
+        .menu-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 10px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+        }
+
+        /* タイトルエリア (編集可能に見せる) */
+        .title-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 2px 10px;
+            transition: background 0.2s;
+        }
+        .title-wrapper:active {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .count-badge {
+            font-size: 0.8rem;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* サイドバー (メニュー) */
+        #sidebar {
+            position: absolute;
+            top: 0;
+            left: calc(var(--sidebar-width) * -1);
+            width: var(--sidebar-width);
+            height: 100%;
+            background-color: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background: var(--paper-bg);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .sidebar-item {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active {
+            background-color: #f0f0f0;
+        }
+        
+        .sidebar-item.active {
+            font-weight: bold;
+            color: var(--text-color);
+            background-color: #eee;
+        }
+
+        .add-list-btn {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background: #fcfbf7;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        /* オーバーレイ (サイドバーが開いた時の背景) */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            z-index: 90;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #overlay.show {
+            display: block;
+            opacity: 1;
+        }
+
+        /* リストエリア (ノート部分) */
+        #list-container {
+            flex: 1;
+            overflow-y: auto;
+            background-image: repeating-linear-gradient(
+                var(--paper-bg) 0px,
+                var(--paper-bg) calc(var(--line-height) - 1px),
+                var(--line-color) var(--line-height)
+            );
+            background-attachment: local;
+            padding-bottom: 80px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        #list-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            counter-reset: bucket-counter;
+        }
+
+        li {
+            display: flex;
+            align-items: center;
+            height: var(--line-height);
+            padding: 0 10px;
+            position: relative;
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        li.sortable-ghost {
+            background-color: rgba(0,0,0,0.05);
+            opacity: 0.5;
+        }
+        li.sortable-drag {
+            background-color: var(--paper-bg);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            opacity: 1;
+        }
+
+        li::before {
+            counter-increment: bucket-counter;
+            content: "#" counter(bucket-counter) ".";
+            font-size: 0.8rem;
+            color: #888;
+            width: 35px;
+            text-align: right;
+            margin-right: 8px;
+            flex-shrink: 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .check-btn {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid var(--text-color);
+            border-radius: 50%;
+            margin-right: 8px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            background: transparent;
+        }
+        .check-btn:checked {
+            background-color: var(--text-color);
+            border-color: var(--text-color);
+        }
+        .check-btn:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .text-content {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 4px;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        li.completed .text-content {
+            text-decoration: line-through;
+            text-decoration-color: var(--accent-color);
+            text-decoration-thickness: 2px;
+            color: #aaa;
+        }
+
+        .delete-btn {
+            border: none;
+            background: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            padding: 0 10px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        li:hover .delete-btn {
+            opacity: 1;
+        }
+        @media (hover: none) {
+            .delete-btn {
+                opacity: 0.5;
+            }
+        }
+
+        .input-area {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background-color: rgba(252, 251, 247, 0.95);
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            backdrop-filter: blur(2px);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #ccc;
+            border-radius: 20px;
+            font-family: 'Yomogi', cursive;
+            font-size: 1rem;
+            outline: none;
+            background: white;
+            transition: border-color 0.3s;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--text-color);
+        }
+
+        button#add-btn {
+            background-color: var(--text-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 0 20px;
+            font-family: 'Yomogi', cursive;
+            font-size: 1rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        button#add-btn:active {
+            transform: scale(0.95);
+        }
+
+        .empty-state {
+            text-align: center;
+            margin-top: 100px;
+            color: #aaa;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        /* サイドバー内の削除ボタン */
+        .list-delete-btn {
+            font-size: 1.2rem;
+            color: #ccc;
+            padding: 0 5px;
+            margin-left: 10px;
+        }
+        .list-delete-btn:hover {
+            color: var(--accent-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- オーバーレイ -->
+        <div id="overlay"></div>
+
+        <!-- サイドバー -->
+        <div id="sidebar">
+            <div class="sidebar-header">
+                ブックリスト一覧
+            </div>
+            <div class="sidebar-list" id="sidebar-list">
+                <!-- リスト一覧がここに入ります -->
+            </div>
+            <div class="add-list-btn" id="create-list-btn">
+                + 新しいリストを作成
+            </div>
+        </div>
+
+        <header>
+            <button class="menu-btn" id="menu-btn">≡</button>
+            <div class="title-wrapper" id="header-title-wrapper">
+                <h1 id="header-title">マイリスト</h1>
+                <span class="count-badge" id="count-display">0 / 100</span>
+            </div>
+            <div style="width: 30px;"></div> <!-- レイアウト調整用のダミー -->
+        </header>
+
+        <div id="list-container">
+            <ul id="bucket-list">
+                <!-- リストアイテムがここに追加されます -->
+            </ul>
+            <div id="empty-msg" class="empty-state">
+                夢を書き出してみよう
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="new-item-text" placeholder="やりたいことは？" maxlength="50" autocomplete="off">
+            <button id="add-btn">書く</button>
+        </div>
+    </div>
+
+    <script>
+        // --- データ管理 ---
+        const STORAGE_KEY = 'my_bucket_list_data';
+        
+        // アプリの状態
+        let appData = {
+            lists: [],
+            currentListId: null
+        };
+
+        // DOM要素
+        const listEl = document.getElementById('bucket-list');
+        const inputEl = document.getElementById('new-item-text');
+        const addBtn = document.getElementById('add-btn');
+        const emptyMsg = document.getElementById('empty-msg');
+        const countDisplay = document.getElementById('count-display');
+        const headerTitle = document.getElementById('header-title');
+        const headerTitleWrapper = document.getElementById('header-title-wrapper');
+        
+        // サイドバー要素
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const menuBtn = document.getElementById('menu-btn');
+        const sidebarListEl = document.getElementById('sidebar-list');
+        const createListBtn = document.getElementById('create-list-btn');
+
+        // 初期化処理
+        function init() {
+            loadItems();
+            renderList();
+            setupSortable();
+            setupSidebarEvents();
+        }
+
+        // データの読み込み & マイグレーション
+        function loadItems() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    
+                    // 以前のバージョン（配列のみ）からの移行チェック
+                    if (Array.isArray(parsed)) {
+                        migrateData(parsed);
+                    } else if (parsed.lists) {
+                        // 新しい形式
+                        appData = parsed;
+                    } else {
+                        // データ破損等は初期化
+                        createNewDefaultList();
+                    }
+                } catch (e) {
+                    createNewDefaultList();
+                }
+            } else {
+                createNewDefaultList();
+            }
+
+            // 万が一 currentListId が不正なら修正
+            if (!appData.lists.find(l => l.id === appData.currentListId)) {
+                if (appData.lists.length > 0) {
+                    appData.currentListId = appData.lists[0].id;
+                } else {
+                    createNewDefaultList();
+                }
+            }
+        }
+
+        // デフォルトリストの作成
+        function createNewDefaultList() {
+            const defaultList = {
+                id: Date.now().toString(),
+                name: 'マイリスト',
+                items: []
+            };
+            appData = {
+                lists: [defaultList],
+                currentListId: defaultList.id
+            };
+            saveItems();
+        }
+
+        // 古いデータ形式からの移行
+        function migrateData(oldItems) {
+            const defaultList = {
+                id: Date.now().toString(),
+                name: 'マイリスト',
+                items: oldItems
+            };
+            appData = {
+                lists: [defaultList],
+                currentListId: defaultList.id
+            };
+            saveItems();
+        }
+
+        // データの保存
+        function saveItems() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            updateCount();
+            renderSidebarList(); // サイドバーの表示も更新（名前変更時など）
+        }
+
+        // 現在のリストを取得
+        function getCurrentList() {
+            return appData.lists.find(l => l.id === appData.currentListId);
+        }
+
+        // 個数表示の更新
+        function updateCount() {
+            const currentList = getCurrentList();
+            if(!currentList) return;
+
+            countDisplay.textContent = `${currentList.items.length} / 100`;
+            emptyMsg.style.display = currentList.items.length === 0 ? 'block' : 'none';
+            headerTitle.textContent = currentList.name;
+        }
+
+        // リストの描画
+        function renderList() {
+            listEl.innerHTML = '';
+            const currentList = getCurrentList();
+            if (!currentList) return;
+            
+            currentList.items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.setAttribute('data-id', index);
+                if (item.completed) li.classList.add('completed');
+
+                // チェックボックス
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'check-btn';
+                checkbox.checked = item.completed;
+                checkbox.addEventListener('change', () => toggleComplete(index));
+
+                // テキスト
+                const span = document.createElement('span');
+                span.className = 'text-content';
+                span.textContent = item.text;
+                span.addEventListener('click', () => editItem(index));
+
+                // 削除ボタン
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.innerHTML = '&times;';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteItem(index);
+                });
+
+                li.appendChild(checkbox);
+                li.appendChild(span);
+                li.appendChild(delBtn);
+                listEl.appendChild(li);
+            });
+
+            updateCount();
+        }
+
+        // --- サイドバー関連処理 ---
+
+        function setupSidebarEvents() {
+            // メニュー開閉
+            menuBtn.addEventListener('click', openSidebar);
+            overlay.addEventListener('click', closeSidebar);
+
+            // リスト作成
+            createListBtn.addEventListener('click', () => {
+                const name = prompt('新しいリストの名前を入力してください:', '新しいリスト');
+                if (name && name.trim()) {
+                    const newList = {
+                        id: Date.now().toString(),
+                        name: name.trim(),
+                        items: []
+                    };
+                    appData.lists.push(newList);
+                    switchList(newList.id);
+                    closeSidebar();
+                }
+            });
+
+            // ヘッダータイトルクリックでリネーム
+            headerTitleWrapper.addEventListener('click', renameCurrentList);
+        }
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('show');
+            renderSidebarList();
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+
+        function renderSidebarList() {
+            sidebarListEl.innerHTML = '';
+            appData.lists.forEach(list => {
+                const div = document.createElement('div');
+                div.className = `sidebar-item ${list.id === appData.currentListId ? 'active' : ''}`;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = list.name + ` (${list.items.length})`;
+                nameSpan.style.flex = "1";
+                nameSpan.onclick = () => {
+                    if (list.id !== appData.currentListId) {
+                        switchList(list.id);
+                        closeSidebar();
+                    }
+                };
+
+                div.appendChild(nameSpan);
+
+                // リスト削除ボタン (1つしか無いときは削除不可)
+                if (appData.lists.length > 1) {
+                    const delSpan = document.createElement('span');
+                    delSpan.className = 'list-delete-btn';
+                    delSpan.innerHTML = '&times;';
+                    delSpan.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteList(list.id);
+                    };
+                    div.appendChild(delSpan);
+                }
+
+                sidebarListEl.appendChild(div);
+            });
+        }
+
+        function switchList(listId) {
+            appData.currentListId = listId;
+            saveItems();
+            renderList();
+        }
+
+        function deleteList(listId) {
+            if (confirm('このリストを削除しますか？\n中身もすべて消えます。')) {
+                appData.lists = appData.lists.filter(l => l.id !== listId);
+                // 削除したリストが選択中だった場合、先頭のリストに切り替え
+                if (appData.currentListId === listId) {
+                    appData.currentListId = appData.lists[0].id;
+                }
+                saveItems();
+                renderSidebarList();
+                renderList();
+            }
+        }
+
+        function renameCurrentList() {
+            const currentList = getCurrentList();
+            const newName = prompt('リスト名を変更:', currentList.name);
+            if (newName && newName.trim()) {
+                currentList.name = newName.trim();
+                saveItems(); // タイトル表示更新も兼ねて
+                renderList();
+            }
+        }
+
+
+        // --- アイテム操作 ---
+
+        function addItem() {
+            const currentList = getCurrentList();
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            if (currentList.items.length >= 999) {
+                alert('999個まで登録できます。夢がいっぱいですね！');
+                return;
+            }
+
+            currentList.items.push({
+                text: text,
+                completed: false
+            });
+            
+            inputEl.value = '';
+            saveItems();
+            renderList();
+            
+            const container = document.getElementById('list-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function toggleComplete(index) {
+            const currentList = getCurrentList();
+            currentList.items[index].completed = !currentList.items[index].completed;
+            saveItems();
+            renderList();
+        }
+
+        function deleteItem(index) {
+            const currentList = getCurrentList();
+            if(confirm('本当に消しますか？')) {
+                currentList.items.splice(index, 1);
+                saveItems();
+                renderList();
+            }
+        }
+
+        function editItem(index) {
+            const currentList = getCurrentList();
+            const currentText = currentList.items[index].text;
+            const newText = prompt('内容を編集:', currentText);
+            
+            if (newText !== null && newText.trim() !== '') {
+                currentList.items[index].text = newText.trim();
+                saveItems();
+                renderList();
+            }
+        }
+
+        // --- イベントリスナー ---
+        
+        addBtn.addEventListener('click', addItem);
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addItem();
+        });
+
+        // --- SortableJSの設定 ---
+        function setupSortable() {
+            new Sortable(listEl, {
+                animation: 150,
+                delay: 200,
+                delayOnTouchOnly: true,
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                onEnd: function (evt) {
+                    const currentList = getCurrentList();
+                    const item = currentList.items.splice(evt.oldIndex, 1)[0];
+                    currentList.items.splice(evt.newIndex, 0, item);
+                    saveItems();
+                }
+            });
+        }
+
+        // アプリ起動
+        init();
+
+    </script>
+</body>
+</html>

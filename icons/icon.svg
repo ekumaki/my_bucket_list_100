@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- 背景（ノートの紙） -->
+  <rect width="512" height="512" rx="64" fill="#fcfbf7"/>
+  
+  <!-- 罫線 -->
+  <line x1="60" y1="120" x2="452" y2="120" stroke="#a4b0be" stroke-width="2"/>
+  <line x1="60" y1="180" x2="452" y2="180" stroke="#a4b0be" stroke-width="2"/>
+  <line x1="60" y1="240" x2="452" y2="240" stroke="#a4b0be" stroke-width="2"/>
+  <line x1="60" y1="300" x2="452" y2="300" stroke="#a4b0be" stroke-width="2"/>
+  <line x1="60" y1="360" x2="452" y2="360" stroke="#a4b0be" stroke-width="2"/>
+  <line x1="60" y1="420" x2="452" y2="420" stroke="#a4b0be" stroke-width="2"/>
+  
+  <!-- チェックマーク（完了アイテム風） -->
+  <circle cx="100" cy="180" r="16" fill="none" stroke="#4b4b4b" stroke-width="3"/>
+  <path d="M90 180 L97 188 L112 172" fill="none" stroke="#4b4b4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- テキスト風の線 -->
+  <line x1="130" y1="180" x2="380" y2="180" stroke="#4b4b4b" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- 未完了アイテム -->
+  <circle cx="100" cy="240" r="16" fill="none" stroke="#4b4b4b" stroke-width="3"/>
+  <line x1="130" y1="240" x2="320" y2="240" stroke="#4b4b4b" stroke-width="3" stroke-linecap="round"/>
+  
+  <circle cx="100" cy="300" r="16" fill="none" stroke="#4b4b4b" stroke-width="3"/>
+  <line x1="130" y1="300" x2="400" y2="300" stroke="#4b4b4b" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- 鉛筆 -->
+  <g transform="translate(320, 380) rotate(-45)">
+    <rect x="0" y="0" width="120" height="24" rx="2" fill="#f5c542"/>
+    <polygon points="120,0 145,12 120,24" fill="#ffb6b6"/>
+    <polygon points="145,12 155,12 145,8 145,16" fill="#4b4b4b"/>
+    <rect x="0" y="0" width="20" height="24" fill="#e8b339"/>
+  </g>
+  
+  <!-- 100の文字 -->
+  <text x="256" y="85" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#4b4b4b" text-anchor="middle">100</text>
+</svg>
+
