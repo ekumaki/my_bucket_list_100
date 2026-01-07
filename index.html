@@ -336,20 +336,24 @@
         }
 
         .input-area {
-            padding: 15px;
-            padding-bottom: max(15px, env(safe-area-inset-bottom, 15px));
+            padding: 10px;
+            padding-left: max(10px, env(safe-area-inset-left, 10px));
+            padding-right: max(10px, env(safe-area-inset-right, 10px));
+            padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
             background-color: rgba(252, 251, 247, 0.95);
             border-top: 1px solid #ddd;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             z-index: 20;
             backdrop-filter: blur(2px);
             flex-shrink: 0;
+            box-sizing: border-box;
         }
 
         input[type="text"] {
             flex: 1;
-            padding: 10px 15px;
+            min-width: 0;
+            padding: 10px 12px;
             border: 2px solid #ccc;
             border-radius: 20px;
             font-family: 'Yomogi', cursive;
@@ -359,6 +363,7 @@
             transition: border-color 0.3s;
             -webkit-user-select: text;
             user-select: text;
+            box-sizing: border-box;
         }
 
         input[type="text"]:focus {
@@ -370,11 +375,13 @@
             color: white;
             border: none;
             border-radius: 20px;
-            padding: 0 20px;
+            padding: 10px 16px;
             font-family: 'Yomogi', cursive;
             font-size: 1rem;
             cursor: pointer;
             white-space: nowrap;
+            flex-shrink: 0;
+            box-sizing: border-box;
         }
         
         button#add-btn:active {
@@ -426,7 +433,7 @@
             <div class="title-wrapper" id="header-title-wrapper">
                 <h1 id="header-title">マイリスト</h1>
             </div>
-            <span class="count-badge" id="count-display">0 / 100</span>
+            <span class="count-badge" id="count-display">0 / 0</span>
         </header>
 
         <div id="list-container">
@@ -572,8 +579,13 @@
             const currentList = getCurrentList();
             if(!currentList) return;
 
-            countDisplay.textContent = `${currentList.items.length} / 100`;
-            emptyMsg.style.display = currentList.items.length === 0 ? 'block' : 'none';
+            // 実行済み数（チェック済み）をカウント
+            const completedCount = currentList.items.filter(item => item.completed).length;
+            // 登録数
+            const totalCount = currentList.items.length;
+
+            countDisplay.textContent = `${completedCount} / ${totalCount}`;
+            emptyMsg.style.display = totalCount === 0 ? 'block' : 'none';
             headerTitle.textContent = currentList.name;
         }
 
