@@ -3,10 +3,10 @@ const CACHE_NAME = 'my-bucket-list-v1';
 
 // キャッシュするローカルファイル
 const LOCAL_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon.svg'
+  './',
+  './index.html',
+  './manifest.json',
+  './icons/icon.svg'
 ];
 
 // キャッシュする外部リソース（CDN）
@@ -141,7 +141,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // オフライン時のフォールバック
             if (request.destination === 'document') {
-              return caches.match('/index.html');
+              return caches.match('./index.html');
             }
             return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
           });

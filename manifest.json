@@ -2,7 +2,7 @@
   "name": "やりたいことリスト100",
   "short_name": "My100List",
   "description": "デジタルなのにアナログな書き心地。夢や目標を大学ノート風に管理するアプリ",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#fcfbf7",
   "theme_color": "#fcfbf7",
