@@ -1,5 +1,5 @@
 // Service Worker for やりたいことリスト100
-const CACHE_NAME = 'my-bucket-list-v1';
+const CACHE_NAME = 'my-bucket-list-v2';
 
 // キャッシュするローカルファイル
 const LOCAL_ASSETS = [
@@ -72,6 +72,39 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // HTMLファイルはネットワークファースト（更新を優先）
+  if (request.destination === 'document' || url.pathname === './' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // ネットワークから取得できた場合はキャッシュを更新
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(request, responseClone);
+              });
+          }
+          return response;
+        })
+        .catch(() => {
+          // オフライン時のみキャッシュから取得
+          return caches.match(request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // フォールバック
+              if (request.destination === 'document') {
+                return caches.match('./index.html');
+              }
+              return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+            });
+        })
+    );
+    return;
+  }
 
   // Google Fontsの場合は特別処理（フォントファイルもキャッシュ）
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
